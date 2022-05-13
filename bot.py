@@ -38,5 +38,12 @@ async def on_message(message):
 
 bot.load_extension("cmds.Spam")
 bot.load_extension("cmds.Uploader")
-bot.load_extension("cmds.Battle")
-bot.run(DISCORD_TOKEN)
+bot.load_extension("cmds.battleCMDS.Battle")
+bot.load_extension("cmds.battleCMDS.CreatePlayer")
+bot.load_extension("cmds.battleCMDS.Shop")
+bot.load_extension("cmds.adminCMDS.addItems")
+bot.load_extension("cmds.battleCMDS.ListItems")
+try:
+    bot.run(DISCORD_TOKEN)
+except:
+    print("Token is invalid")
