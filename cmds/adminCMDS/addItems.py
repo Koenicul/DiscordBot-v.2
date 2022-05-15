@@ -20,7 +20,7 @@ def save():
 @commands.command(name="addItem", help="bruh")
 async def addItem(ctx, name, description, price, effectType, effect):
     if ctx.message.author.name == os.getenv("Owner_id"):
-        items[len(items)+1] = {"name": name, "description": description, "price": int(price), "effectType": effectType, "effect": effect}
+        items[len(items)+1] = {"name": name, "description": description, "price": int(price), "effectType": effectType, "effect": int(effect)}
         await ctx.send("Added item\nName: " + name + "\nDescription: " + description + "\nPrice: $" + price + "\nEffectType: " + effectType + "\nEffect: " + effect)
         save()
 
