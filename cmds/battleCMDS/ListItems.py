@@ -1,5 +1,4 @@
 import json
-from unicodedata import name
 from discord.ext import commands
 
 data = {}
