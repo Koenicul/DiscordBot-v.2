@@ -12,17 +12,6 @@ p2_move_made = False
 winner = 0
 attackTypes = {}
 
-try:
-    with open('battle_users.json', 'r') as f:
-        data = json.load(f)
-except:
-    with open('battle_users.json', 'w') as jsonFile:
-        json.dump(data, jsonFile)
-
-def save():
-    with open('battle_users.json', 'w') as f:
-        f.write(json.dumps(data))
-
 def check_winner(p1, p2):
     global game_over
     
@@ -42,6 +31,13 @@ async def Fwinner(ctx, p1, p2):
 
 @commands.command(name="Battle", help="Start a battle")
 async def Battle(ctx, user2: discord.Member):
+    try:
+        with open('battle_users.json', 'r') as f:
+            data = json.load(f)
+    except:
+        with open('battle_users.json', 'w') as jsonFile:
+            json.dump(data, jsonFile)
+
     global game_over
     
     user1 = ctx.message.author
@@ -97,6 +93,13 @@ def check_move(p1, p2, attackType):
 
 @commands.command(name="Move", help="Move in battle")
 async def Move(ctx, option: int, attackType = 0):
+    try:
+        with open('battle_users.json', 'r') as f:
+            data = json.load(f)
+    except:
+        with open('battle_users.json', 'w') as jsonFile:
+            json.dump(data, jsonFile)
+
     global game_over
     global turn
     global p1_move_made
@@ -184,11 +187,13 @@ async def Move(ctx, option: int, attackType = 0):
             if game_over:
                 p1['hp'] = base_health
                 p2['hp'] = base_health
-                save()
+                with open('battle_users.json', 'w') as f:
+                    f.write(json.dumps(data))
 
         else:
             await ctx.send("Invalid option!")
-        save()
+        with open('battle_users.json', 'w') as f:
+            f.write(json.dumps(data))
     else:
         await ctx.send("No game has started.")
 

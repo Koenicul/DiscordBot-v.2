@@ -3,19 +3,15 @@ from discord.ext import commands
 
 data = {}
 
-try:
-    with open('battle_users.json', 'r') as f:
-        data = json.load(f)
-except:
-    with open('battle_users.json', 'w') as jsonFile:
-        json.dump(data, jsonFile)
-
-def save():
-    with open('battle_users.json', 'w') as f:
-        f.write(json.dumps(data))
-
 @commands.command(name="CreatePlayer", help="Create a player")
 async def CreatePlayer(ctx):
+    try:
+        with open('battle_users.json', 'r') as f:
+            data = json.load(f)
+    except:
+        with open('battle_users.json', 'w') as jsonFile:
+            json.dump(data, jsonFile)
+
     if str(ctx.author.id) not in data:
         data[ctx.author.id] = {
             "name": ctx.author.name,
@@ -29,7 +25,9 @@ async def CreatePlayer(ctx):
             "items": []
         }
         await ctx.send("Player created!")
-        save()
+        with open('battle_users.json', 'w') as f:
+            f.write(json.dumps(data))
+        print(data)
     else:
         await ctx.send("You already have a player!")
 

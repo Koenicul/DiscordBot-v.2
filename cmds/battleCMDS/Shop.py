@@ -5,19 +5,15 @@ import discord
 data = {}
 items = {}
 
-try:
-    with open('battle_users.json', 'r') as f:
-        data = json.load(f)
-except:
-    with open('battle_users.json', 'w') as jsonFile:
-        json.dump(data, jsonFile)
-
-def save():
-    with open('battle_users.json', 'w') as f:
-        f.write(json.dumps(data))
-
 @commands.command(name="Shop", help="Open shop menu")
 async def Shop(ctx):
+    try:
+        with open('battle_users.json', 'r') as f:
+            data = json.load(f)
+    except:
+        with open('battle_users.json', 'w') as jsonFile:
+            json.dump(data, jsonFile)
+
     try:
         with open('items.json', 'r') as f:
             items = json.load(f)
@@ -40,19 +36,27 @@ async def Shop(ctx):
 @commands.command(name="Buy", help="Buy an item")
 async def Buy(ctx, item: int):
     try:
+        with open('battle_users.json', 'r') as f:
+            data = json.load(f)
+    except:
+        with open('battle_users.json', 'w') as jsonFile:
+            json.dump(data, jsonFile)
+
+    try:
         with open('items.json', 'r') as f:
             items = json.load(f)
     except:
         with open('items.json', 'w') as jsonFile:
             json.dump(items, jsonFile)
+
     if 0 < item <= len(items):
         if str(ctx.author.id) in data:
-            print("test2")
             if data[str(ctx.author.id)]["gold"] >= items[str(item)]["price"]:
                 data[str(ctx.author.id)]["gold"] -= items[str(item)]["price"]
                 data[str(ctx.author.id)]["items"].append(str(item))
                 await ctx.send("Bought " + items[str(item)]["name"])
-                save()
+                with open('battle_users.json', 'w') as f:
+                    f.write(json.dumps(data))
             else:
                 await ctx.send("You don't have enough gold!")
 
