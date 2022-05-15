@@ -47,22 +47,31 @@ async def Battle(ctx, user2: discord.Member):
     user1 = ctx.message.author
     if game_over:
         if user1.id != user2.id:
-            if str(user2.id) in data:
-                p1 = data[str(user1.id)]
-                p2 = data[str(user2.id)]
-                
-                if p1['speed'] > p2['speed']:
-                    current_battle[user1.id] = []
-                    current_battle[user2.id] = []
-                else:
-                    current_battle[user2.id] = []
-                    current_battle[user1.id] = []
+            try:
+                player_1 = data[str(user1.id)]
+            except:
+                await ctx.send(f"{user1.display_name} has not created a player!")
+                return
+            
+            try:
+                player_2 = data[str(user2.id)]
+            except:
+                await ctx.send(f"{user2.display_name} has not created a player!")
+                return
 
-                await ctx.send(f"{user1.mention} has started a battle with {user2.mention}")
-
-                game_over = False
+            p1 = data[str(user1.id)]
+            p2 = data[str(user2.id)]
+            
+            if p1['speed'] > p2['speed']:
+                current_battle[user1.id] = []
+                current_battle[user2.id] = []
             else:
-                await ctx.send("That user has no player!")
+                current_battle[user2.id] = []
+                current_battle[user1.id] = []
+
+            await ctx.send(f"{user1.mention} has started a battle with {user2.mention}")
+
+            game_over = False
         else:
             await ctx.send("You can't battle yourself!")
     else:
