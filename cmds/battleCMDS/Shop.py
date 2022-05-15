@@ -54,11 +54,20 @@ async def Buy(ctx, item: int):
             if data[str(ctx.author.id)]["gold"] >= items[str(item)]["price"]:
                 data[str(ctx.author.id)]["gold"] -= items[str(item)]["price"]
                 data[str(ctx.author.id)]["items"].append(str(item))
+
+                change_stats(ctx, data, items, item)
+
                 await ctx.send("Bought " + items[str(item)]["name"])
                 with open('battle_users.json', 'w') as f:
                     f.write(json.dumps(data))
             else:
                 await ctx.send("You don't have enough gold!")
+
+def change_stats(ctx, data, items, item):
+    if items[str(item)]["effectType"] == "weapon":
+        data[str(ctx.author.id)]["attack"] += items[str(item)]["effect"]
+    elif items[str(item)]["effectType"] == "armor":
+        data[str(ctx.author.id)]["defense"] -= items[str(item)]["effect"]
 
 def setup(bot):
     bot.add_command(Shop)
