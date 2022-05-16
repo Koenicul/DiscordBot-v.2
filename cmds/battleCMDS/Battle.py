@@ -27,8 +27,8 @@ def check_winner(p1, p2):
         return 0
 
 async def Fwinner(ctx, p1, p2):
-    p1['hp'] = base_health
-    p2['hp'] = base_health
+    p1['hp'] = p1['maxhp']
+    p2['hp'] = p2['maxhp']
     current_battle.clear()
     with open('battle_users.json', 'w') as f:
         f.write(json.dumps(data))
@@ -93,14 +93,14 @@ def check_move(p1, p2, attackType):
         return 7
     elif p1 == ['attack'] and p2 == ['block'] and attackType == [2]:
         return 8
-    elif p1 == ['item']:
+    elif 'item' in p1:
         return 3
     elif p1 == ['surrender'] and p2 != ['surrender']:
         return 4
     elif p1 == ['block'] and p2 == ['block']:
         return 5
     elif p1 == ['surrender'] and p2 == ['surrender']:
-        return 6 
+        return 6
     elif p1 == ['block'] and p2 != ['attack']:
         return 9
 
@@ -112,6 +112,13 @@ async def Move(ctx, option: int, attackType = 0):
     except:
         with open('battle_users.json', 'w') as jsonFile:
             json.dump(data, jsonFile)
+
+    try:
+        with open('items.json', 'r') as f:
+            items = json.load(f)
+    except:
+        with open('items.json', 'w') as jsonFile:
+            json.dump(items, jsonFile)
 
     global game_over
     global turn
@@ -132,8 +139,10 @@ async def Move(ctx, option: int, attackType = 0):
                 elif option == 2:
                     current_battle[ctx.author.id] = ['block']
                 elif option == 3:
-                    if await useItem(ctx, p1):
+                    usedItem = await useItem(ctx, p1)
+                    if usedItem != 0:
                         current_battle[ctx.author.id] = ['item']
+                        current_battle[ctx.author.id].append(usedItem)
                     else:
                         return
                 else:
@@ -147,8 +156,10 @@ async def Move(ctx, option: int, attackType = 0):
                 elif option == 2:
                     current_battle[ctx.author.id] = ['block']
                 elif option == 3:
-                    if await useItem(ctx, p2):
+                    usedItem = await useItem(ctx, p2)
+                    if usedItem != 0:
                         current_battle[ctx.author.id] = ['item']
+                        current_battle[ctx.author.id].append(usedItem)
                     else:
                         return
                 else:
@@ -170,11 +181,14 @@ async def Move(ctx, option: int, attackType = 0):
                     if move_case == 2:
                         await ctx.send(f"{player_2['name']} blocked {player_1['name']}'s attack!")
                     if move_case == 3:
-                        ## TODO: Add item use code
+                        if player_1['hp'] + items[current_battle[player][1]]['effect'] > player_1['maxhp']:
+                            player_1['hp'] = player_1['maxhp']
+                        else:
+                            player_1['hp'] += items[current_battle[player][1]]['effect']
                         
-
-
-                        await ctx.send(f"{player_1['name']} used an item!")
+                        potions.clear()
+                        player_1['items'].remove(current_battle[player][1])
+                        await ctx.send(f"{player_1['name']} used {items[current_battle[player][1]]['name']} and recovered {items[current_battle[player][1]]['effect']} HP!")
                     if move_case == 4:
                         await ctx.send(f"{player_1['name']} surrendered!")
                         await Fwinner(ctx, player_2, player_1)
@@ -232,29 +246,25 @@ async def useItem(ctx, player):
         if items[i]["effectType"] == "potion":
             potions[index] = items[i]
             potions[index]["item"] = i
-            
 
             index += 1
-
-    print(potions)
     
     if len(potions) > 0:
         await ctx.send(f"potions: " + ", ".join(potions[i]["name"] for i in potions) + ".")
 
         msg = await ctx.bot.wait_for('message', check=lambda message: message.author == ctx.author)
         try:
-            if int(msg.content) <= len(potions):
-                await ctx.send(f"{ctx.author.mention} has used {potions[int(msg.content)]['name']}!")
-                return True
+            if 0 < int(msg.content) <= len(potions):
+                return potions[int(msg.content)]['item']
             else:
                 await ctx.send("Invalid number")
-                return False
+                return 0
         except:
             await ctx.send("Enter a number")
-            return False
+            return 0
     else:
         await ctx.send("You have no items")
-        return False
+        return 0
 
 @Battle.error
 async def Battle_error(ctx):
