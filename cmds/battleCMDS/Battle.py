@@ -193,6 +193,7 @@ async def Move(ctx, option: int, attackType = 0):
                         await ctx.send(f"{player_1['name']} surrendered!")
                         await Fwinner(ctx, player_2, player_1)
                         game_over = True
+                        break
                     if move_case == 5:
                         await ctx.send("Both players blocked!")
                         break
