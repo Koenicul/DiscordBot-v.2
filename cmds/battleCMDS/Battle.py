@@ -14,6 +14,31 @@ winner = 0
 attackTypes = {}
 potions = {}
 
+reward_lookup = {
+    tuple(range(101, 10000)): 70,
+    tuple(range(90, 100)): 65,
+    tuple(range(80, 89)): 63,
+    tuple(range(70, 79)): 60,
+    tuple(range(60, 69)): 57,
+    tuple(range(50, 59)): 54,
+    tuple(range(40, 49)): 50,
+    tuple(range(30, 39)): 45,
+    tuple(range(20, 29)): 49,
+    tuple(range(10, 19)): 32,
+    tuple(range(0, 9)): 25,
+    tuple(range(-9, 0)): 25,
+    tuple(range(-19, -10)): 24,
+    tuple(range(-29, -20)): 23,
+    tuple(range(-39, -30)): 21,
+    tuple(range(-49, -40)): 19,
+    tuple(range(-59, -50)): 16,
+    tuple(range(-69, -60)): 13,
+    tuple(range(-79, -70)): 10,
+    tuple(range(-89, -80)): 8,
+    tuple(range(-100, -90)): 6,
+    tuple(range(-10000, -101)): 5
+}
+
 def check_winner(p1, p2):
     global game_over
     
@@ -27,12 +52,38 @@ def check_winner(p1, p2):
         return 0
 
 async def Fwinner(ctx, p1, p2):
+    await ctx.send(f'{p1["name"]} wins!')
     p1['hp'] = p1['maxhp']
     p2['hp'] = p2['maxhp']
     current_battle.clear()
+
+    change = calcReward(p1, p2)
+
+    p1['exp'] += change / 2
+    p1['gold'] += change
+    await checkExp(ctx, p1)
+
+    p2['exp'] += int(change / 10)
+    p2['gold'] += int(change / 10)
+    await checkExp(ctx, p2)
+
     with open('battle_users.json', 'w') as f:
         f.write(json.dumps(data))
-    await ctx.send(f'{p1["name"]} wins!')
+
+def calcReward(p1, p2):
+    diff = p2['level'] - p1['level']
+    for key in reward_lookup:
+        if diff in key:
+            return reward_lookup[key]
+
+async def checkExp(ctx, player):
+    if player['exp'] >= player['level'] * 10:
+        player['level'] += 1
+        player['maxhp'] += 10
+        player['hp'] += 10
+        player['exp'] = 0
+
+        await ctx.send(f"{player['name']} has leveled up to level {player['level']}!\n{player['name']}'s max health has increased by 10!")
 
 @commands.command(name="Battle", help="Start a battle")
 async def Battle(ctx, user2: discord.Member):
