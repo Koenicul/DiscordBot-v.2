@@ -68,6 +68,8 @@ def change_stats(ctx, data, items, item):
         data[str(ctx.author.id)]["attack"] += items[str(item)]["effect"]
     elif items[str(item)]["effectType"] == "armor":
         data[str(ctx.author.id)]["defense"] -= items[str(item)]["effect"]
+    elif items[str(item)]["effectType"] == "boots":
+        data[str(ctx.author.id)]["speed"] += items[str(item)]["effect"]
 
 def setup(bot):
     bot.add_command(Shop)
