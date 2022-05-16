@@ -131,8 +131,8 @@ async def Battle(ctx, user2: discord.Member):
                 return await ctx.send(embed=embed)
 
             embed = discord.Embed(
-                title=f"<@{user2.id}>",
-                description=f"Do you want to battle {user1.mention}? (yes/no)",
+                title=f"{user1.display_name} vs {user2.display_name}",
+                description=f"{user2.mention} do you want to battle {user1.mention}? (yes/no)",
             )
             await ctx.send(embed=embed)
             msg = await ctx.bot.wait_for('message', check=lambda message: message.author == user2)
@@ -153,10 +153,14 @@ async def Battle(ctx, user2: discord.Member):
                 embed = discord.Embed(title="A battle has started!", description=f"{user1.mention} VS {user2.mention}")
                 await ctx.send(embed=embed)
 
-                embed = discord.Embed(title=f"{user1.mention}", description="Choose your move: (attack/block/item/surrender)")
-                await user1.send(embed=embed)
+                embed = discord.Embed(
+                    title="Move:",
+                    description="Choose your move: (attack/block/item/surrender)",
+                )
 
-                embed = discord.Embed(title=f"{user2.mention}", description="Choose your move: (attack/block/item/surrender)")
+                embed.set_footer(text="Type '--move <move index>' to make your move!")
+
+                await user1.send(embed=embed)
                 await user2.send(embed=embed)
 
                 channel = ctx.bot.get_channel(ctx.channel.id)
@@ -164,8 +168,8 @@ async def Battle(ctx, user2: discord.Member):
                 p1['hp'] = p1['maxhp']
                 p2['hp'] = p2['maxhp']
                 game_over = False
-            elif msg.content.lower() == 'no':
-                embed = discord.Embed(title=f"{user2.mention} has declined the battle")
+            else:
+                embed = discord.Embed(title=f"{user2.display_name} has declined the battle")
                 await ctx.send(embed=embed)
         else:
             embed = discord.Embed(title=f"You can't battle yourself!")
@@ -315,8 +319,18 @@ async def Move(ctx, option: int, attackType = 0):
                 p1_move_made = False
                 p2_move_made = False
 
-                # await ctx.bot.get_user(list(current_battle.keys())[0]).send("Choose your move: (attack/block/item/surrender)")
-                # await ctx.bot.get_user(list(current_battle.keys())[1]).send("Choose your move: (attack/block/item/surrender)")
+                p1_user = await ctx.bot.fetch_user(str(list(current_battle.keys())[0]))
+                p2_user = await ctx.bot.fetch_user(str(list(current_battle.keys())[1])) 
+
+                embed = discord.Embed(
+                    title="Move:",
+                    description="Choose your move: (attack/block/item/surrender)",
+                )
+
+                embed.set_footer(text="Type '--move <move index>' to make your move!")
+
+                await p1_user.send(embed=embed)
+                await p2_user.send(embed=embed)
 
             if winner == 1:
                 await Fwinner(p1, p2)
