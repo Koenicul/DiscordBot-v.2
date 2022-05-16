@@ -16,6 +16,7 @@ async def CreatePlayer(ctx):
         data[ctx.author.id] = {
             "name": ctx.author.name,
             "hp": 100,
+            "maxhp": 100,
             "level": 1,
             "exp": 0,
             "gold": 0,

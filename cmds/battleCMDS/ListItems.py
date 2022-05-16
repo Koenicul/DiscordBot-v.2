@@ -22,7 +22,7 @@ async def ListItems(ctx):
 
     if str(ctx.author.id) in data:
         if len(data[str(ctx.author.id)]["items"]) > 0:
-            await ctx.send(f"{ctx.author.name} has these items: " + ", ".join(items[i]["name"] for i in data[str(ctx.author.id)]["items"]) + ".")
+            await ctx.send(f"{ctx.author.mention} has these items: " + ", ".join(items[i]["name"] for i in data[str(ctx.author.id)]["items"]) + ".")
         else:
             await ctx.send("You have no items")
     else:
