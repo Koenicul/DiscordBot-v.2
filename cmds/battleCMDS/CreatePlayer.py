@@ -28,7 +28,6 @@ async def CreatePlayer(ctx):
         await ctx.send("Player created!")
         with open('battle_users.json', 'w') as f:
             f.write(json.dumps(data))
-        print(data)
     else:
         await ctx.send("You already have a player!")
 
