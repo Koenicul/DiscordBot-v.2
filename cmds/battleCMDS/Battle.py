@@ -13,6 +13,7 @@ p2_move_made = False
 winner = 0
 attackTypes = {}
 potions = {}
+channel = None
 
 reward_lookup = {
     tuple(range(101, 10000)): 70,
@@ -51,21 +52,27 @@ def check_winner(p1, p2):
     else:
         return 0
 
-async def Fwinner(ctx, p1, p2):
-    await ctx.send(f'{p1["name"]} wins!')
+async def Fwinner(p1, p2):
+    global channel
+    embed = discord.Embed(title="Battle Over!", description=f"{p1['name']} has won the battle!", color=0x00ff00)
+
     p1['hp'] = p1['maxhp']
     p2['hp'] = p2['maxhp']
-    current_battle.clear()
 
     change = calcReward(p1, p2)
 
-    p1['exp'] += change / 2
+    embed.add_field(name=f"{p1['name']} reward:", value=f"{int(change / 2)} exp\n{change} gold")
+    embed.add_field(name=f"{p2['name']} reward:", value=f"{int(change / 10)} exp\n{int(change / 10)} gold")
+
+    p1['exp'] += int(change / 2)
     p1['gold'] += change
-    await checkExp(ctx, p1)
+    await checkExp(p1)
+
+    await channel.send(embed=embed)
 
     p2['exp'] += int(change / 10)
     p2['gold'] += int(change / 10)
-    await checkExp(ctx, p2)
+    await checkExp(p2)
 
     with open('battle_users.json', 'w') as f:
         f.write(json.dumps(data))
@@ -76,14 +83,19 @@ def calcReward(p1, p2):
         if diff in key:
             return reward_lookup[key]
 
-async def checkExp(ctx, player):
+async def checkExp(player):
+    global channel
     if player['exp'] >= player['level'] * 10:
-        player['level'] += 1
         player['maxhp'] += 10
         player['hp'] += 10
-        player['exp'] = 0
+        player['exp'] -= player['level'] * 10
+        player['level'] += 1
 
-        await ctx.send(f"{player['name']} has leveled up to level {player['level']}!\n{player['name']}'s max health has increased by 10!")
+        embed = discord.Embed(title="Level Up!", description=f"{player['name']} has leveled up to level {player['level']}!", color=0x00ff00)
+        embed.add_field(name="Health has increased by 10!", value=f"{player['name']} now has {player['maxhp']} health!")
+        embed.add_field(name=f"{player['name']} now needs:", value=f"{player['level'] * 10 - player['exp']} exp to level up!")
+
+        await channel.send(embed=embed)
 
 @commands.command(name="Battle", help="Start a battle")
 async def Battle(ctx, user2: discord.Member):
@@ -96,6 +108,7 @@ async def Battle(ctx, user2: discord.Member):
 
     global game_over
     global winner
+    global channel
     
     user1 = ctx.message.author
     if game_over:
@@ -103,37 +116,63 @@ async def Battle(ctx, user2: discord.Member):
             try:
                 data[str(user1.id)]
             except:
-                await ctx.send(f"{user1.display_name} has not created a player!")
-                return
-            
+                embed = discord.Embed(
+                    title=f"{user1.display_name} doesn't have a player yet!",
+                    description='Do you want to create a player?'
+                )
+                return await ctx.send(embed=embed)
             try:
                 data[str(user2.id)]
             except:
-                await ctx.send(f"{user2.display_name} has not created a player!")
-                return
+                embed = discord.Embed(
+                    title=f"{user2.display_name} doesn't have a player yet!",
+                    description='Do you want to create a player?'
+                )
+                return await ctx.send(embed=embed)
 
-            p1 = data[str(user1.id)]
-            p2 = data[str(user2.id)]
-            
-            if p1['speed'] > p2['speed']:
-                current_battle[user1.id] = []
-                current_battle[user2.id] = []
-            else:
-                current_battle[user2.id] = []
-                current_battle[user1.id] = []
-
-            await ctx.send(f"{user2.mention} do you accept to battle {user1.mention}? (yes/no)")
+            embed = discord.Embed(
+                title=f"<@{user2.id}>",
+                description=f"Do you want to battle {user1.mention}? (yes/no)",
+            )
+            await ctx.send(embed=embed)
             msg = await ctx.bot.wait_for('message', check=lambda message: message.author == user2)
             if msg.content.lower() == 'yes':
-                await ctx.send(f"{user1.mention} has started a battle with {user2.mention}")
+                p1 = data[str(user1.id)]
+                p2 = data[str(user2.id)]
+                
+                current_battle.clear()
+                channel = None
+
+                if p1['speed'] > p2['speed']:
+                    current_battle[user1.id] = []
+                    current_battle[user2.id] = []
+                else:
+                    current_battle[user2.id] = []
+                    current_battle[user1.id] = []
+
+                embed = discord.Embed(title="A battle has started!", description=f"{user1.mention} VS {user2.mention}")
+                await ctx.send(embed=embed)
+
+                embed = discord.Embed(title=f"{user1.mention}", description="Choose your move: (attack/block/item/surrender)")
+                await user1.send(embed=embed)
+
+                embed = discord.Embed(title=f"{user2.mention}", description="Choose your move: (attack/block/item/surrender)")
+                await user2.send(embed=embed)
+
+                channel = ctx.bot.get_channel(ctx.channel.id)
                 winner = 0
+                p1['hp'] = p1['maxhp']
+                p2['hp'] = p2['maxhp']
                 game_over = False
             elif msg.content.lower() == 'no':
-                await ctx.send(f"{user2.mention} didn't accept the battle!")
+                embed = discord.Embed(title=f"{user2.mention} has declined the battle")
+                await ctx.send(embed=embed)
         else:
-            await ctx.send("You can't battle yourself!")
+            embed = discord.Embed(title=f"You can't battle yourself!")
+            await ctx.send(embed=embed)
     else:
-        await ctx.send("A battle is already in progress!")
+        embed = discord.Embed(title=f"There is already a battle going on!")
+        await ctx.send(embed=embed)
 
 def check_move(p1, p2, attackType): 
     if p1 == ['attack'] and p2 != ['block'] and attackType == [1]:
@@ -176,6 +215,7 @@ async def Move(ctx, option: int, attackType = 0):
     global p1_move_made
     global p2_move_made
     global winner
+    global channel
 
     if not game_over:
         if 0 < option < 5:
@@ -219,6 +259,10 @@ async def Move(ctx, option: int, attackType = 0):
 
             if p1_move_made and p2_move_made:
                 i = 1
+                embed = discord.Embed(
+                    title="Battle", 
+                    color=0x00ff00
+                )
                 for player in current_battle:
                     player_1 = data[str(player)]
                     player_2 = data[str(list(current_battle.keys())[i])]
@@ -228,9 +272,9 @@ async def Move(ctx, option: int, attackType = 0):
 
                     if move_case == 1:
                         player_2['hp'] -= player_1['attack'] * player_2['defense']
-                        await ctx.send(f"{player_1['name']} light attacked {player_2['name']} for {player_1['attack'] * player_2['defense']} damage!")
+                        embed.add_field(name=f"{player_1['name']} light attacked {player_2['name']} for {player_1['attack'] * player_2['defense']} damage!", value="test")
                     if move_case == 2:
-                        await ctx.send(f"{player_2['name']} blocked {player_1['name']}'s attack!")
+                        embed.add_field(name=f"{player_2['name']} blocked {player_1['name']}'s attack!", value="test")
                     if move_case == 3:
                         if player_1['hp'] + items[current_battle[player][1]]['effect'] > player_1['maxhp']:
                             player_1['hp'] = player_1['maxhp']
@@ -239,43 +283,46 @@ async def Move(ctx, option: int, attackType = 0):
                         
                         potions.clear()
                         player_1['items'].remove(current_battle[player][1])
-                        await ctx.send(f"{player_1['name']} used {items[current_battle[player][1]]['name']} and recovered {items[current_battle[player][1]]['effect']} HP!")
+                        embed.add_field(name=f"{player_1['name']} used {items[current_battle[player][1]]['name']} and recovered {items[current_battle[player][1]]['effect']} HP!", value="test")
                     if move_case == 4:
-                        await ctx.send(f"{player_1['name']} surrendered!")
-                        await Fwinner(ctx, player_2, player_1)
+                        embed.add_field(name=f"{player_1['name']} surrendered!", value="test")
+                        await Fwinner(player_2, player_1)
                         game_over = True
-                        break
                     if move_case == 5:
-                        await ctx.send("Both players blocked!")
-                        break
+                        embed.add_field(name="Both players blocked!", value="test")
                     if move_case == 6:
-                        await ctx.send("Both players surrendered!")
+                        embed.add_field(name="Both players surrendered!", value="test")
                         game_over = True
                         break
                     if move_case == 7:
                         player_2['hp'] -= player_1['attack'] * player_2['defense'] * 0.5
-                        await ctx.send(f"{player_1['name']} heavy attacked {player_2['name']} for {player_1['attack'] * player_2['defense'] * 0.5} damage!")
+                        embed.add_field(name=f"{player_1['name']} heavy attacked {player_2['name']} for {player_1['attack'] * player_2['defense'] * 0.5} damage!", value="test")
                     if move_case == 8:
                         player_2['hp'] -= player_1['attack'] * player_2['defense'] * 1.5
-                        await ctx.send(f"{player_1['name']} heavy attacked {player_2['name']} for {player_1['attack'] * player_2['defense'] * 1.5} damage!")
+                        embed.add_field(name=f"{player_1['name']} heavy attacked {player_2['name']} for {player_1['attack'] * player_2['defense'] * 1.5} damage!", value="test")
                     if move_case == 9:
-                        await ctx.send(f"{player_1['name']} blocked but {player_2['name']} didn't attack!")
+                        embed.add_field(name=f"{player_1['name']} blocked but {player_2['name']} didn't attack!", value="test")
 
                     winner = check_winner(p1, p2)
-
-                    if winner != 0:
-                        break
                     
                     i -= 1
+
+                await channel.send(
+                    f"<@{list(current_battle.keys())[0]}> vs <@{list(current_battle.keys())[1]}>",
+                    embed=embed
+                )
 
                 p1_move_made = False
                 p2_move_made = False
 
+                # await ctx.bot.get_user(list(current_battle.keys())[0]).send("Choose your move: (attack/block/item/surrender)")
+                # await ctx.bot.get_user(list(current_battle.keys())[1]).send("Choose your move: (attack/block/item/surrender)")
+
             if winner == 1:
-                await Fwinner(ctx, p1, p2)
+                await Fwinner(p1, p2)
             
             if winner == 2:
-                await Fwinner(ctx, p2, p1)
+                await Fwinner(p2, p1)
 
         else:
             await ctx.send("Invalid option!")
