@@ -5,15 +5,12 @@ load_dotenv()
 from discord.ext.commands import CommandNotFound
 import json
 from random import choice
-
-help_command = commands.DefaultHelpCommand(
-    no_category = 'Commands'
-)
+from pretty_help import PrettyHelp
 
 DISCORD_TOKEN = os.getenv("Discord_Token")
 PREFIX = os.getenv("Prefix")
 
-bot = commands.Bot(command_prefix=PREFIX, case_insensitive=True, help_command = help_command)
+bot = commands.Bot(command_prefix=PREFIX, case_insensitive=True, help_command = PrettyHelp())
 
 @bot.event
 async def on_ready():
