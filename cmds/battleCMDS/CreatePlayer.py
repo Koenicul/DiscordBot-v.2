@@ -1,35 +1,24 @@
-import json
 from discord.ext import commands
+import db
+from sqlalchemy.orm import sessionmaker
 
-data = {}
+Session = sessionmaker(bind=db.engine)
+session = Session()
 
 @commands.command(name="CreatePlayer", help="Create a player")
 async def CreatePlayer(ctx):
-    try:
-        with open('battle_users.json', 'r') as f:
-            data = json.load(f)
-    except:
-        with open('battle_users.json', 'w') as jsonFile:
-            json.dump(data, jsonFile)
+    exists = session.query(db.Player).filter(db.Player.id == ctx.author.id).first()
+    print(exists)
+    if exists is None:
+        print("Creating player")
+        player = db.Player(ctx.author.id, ctx.author.name, 100, 100, 1, 0, 100, 10, 1, 1)
+        session.add(player)
+        session.commit()
 
-    if str(ctx.author.id) not in data:
-        data[ctx.author.id] = {
-            "name": ctx.author.name,
-            "hp": 100,
-            "maxhp": 100,
-            "level": 1,
-            "exp": 0,
-            "gold": 0,
-            "attack": 10,
-            "defense": 1,
-            "speed": 1,
-            "items": []
-        }
         await ctx.send("Player created!")
-        with open('battle_users.json', 'w') as f:
-            f.write(json.dumps(data))
     else:
-        await ctx.send("You already have a player!")
+        print(exists.player_id)
+        await ctx.send("Player already exists")
 
 def setup(bot):
     bot.add_command(CreatePlayer)

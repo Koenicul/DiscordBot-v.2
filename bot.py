@@ -6,6 +6,11 @@ from discord.ext.commands import CommandNotFound
 import json
 from random import choice
 from pretty_help import PrettyHelp
+import db
+from sqlalchemy.orm import sessionmaker
+
+Session = sessionmaker(bind=db.engine)
+session = Session()
 
 DISCORD_TOKEN = os.getenv("Discord_Token")
 PREFIX = os.getenv("Prefix")
@@ -39,7 +44,7 @@ bot.load_extension("cmds.battleCMDS.Battle")
 bot.load_extension("cmds.battleCMDS.CreatePlayer")
 bot.load_extension("cmds.battleCMDS.Shop")
 bot.load_extension("cmds.adminCMDS.addItems")
-bot.load_extension("cmds.battleCMDS.ListItems")
+bot.load_extension("cmds.battleCMDS.Inventory")
 try:
     bot.run(DISCORD_TOKEN)
 except:
