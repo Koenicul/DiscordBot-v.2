@@ -70,11 +70,11 @@ async def Fwinner(p1, p2):
     p1.gold += change
     await checkExp(p1)
 
-    await channel.send(embed=embed)
-
     p2.exp += int(change / 10)
     p2.gold += int(change / 10)
     await checkExp(p2)
+
+    await channel.send(embed=embed)
 
 
 def calcReward(p1, p2):
@@ -267,6 +267,7 @@ async def Move(ctx, option: int, attackType = 0):
                         player_2.hp -= player_1.attack * player_2.defense
                         embed.add_field(name=f"{player_1.name} light attacked {player_2.name} for {player_1.attack * player_2.defense} damage!", value="test")
                     if move_case == 2:
+                        player_1.hp -= player_1.attack * player_1.defense * 0.5
                         embed.add_field(name=f"{player_2.name} blocked {player_1.name}'s attack!", value="test")
                     if move_case == 3:
                         item = session.query(db.PlayerItem).filter(db.PlayerItem.id == current_battle[player][1]).first()
