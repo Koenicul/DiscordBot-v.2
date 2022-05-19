@@ -21,6 +21,7 @@ class Player (Base):
     speed = Column(Integer)
 
     playerItems = relationship("PlayerItem", backref="player")
+    equips = relationship("Equipment", backref="player")
 
     def __init__(self, id, name, hp, maxhp, level, exp, gold, attack, defense, speed):
         self.id = id
@@ -45,6 +46,7 @@ class Item (Base):
     effect = Column(Float)
 
     items = relationship("PlayerItem", backref="item")
+    equips = relationship("Equipment", backref="item")
 
     def __init__(self, name, description, price, type, effect):
         self.name = name
@@ -58,6 +60,13 @@ class PlayerItem (Base):
 
     id = Column(Integer, primary_key=True)
     player_id  = Column(Integer, ForeignKey('player.id'))
+    item_id = Column(Integer, ForeignKey('item.id'))
+
+class Equipment (Base):
+    __tablename__ = 'equipment'
+
+    id = Column(Integer, primary_key=True)
+    player_id = Column(Integer, ForeignKey('player.id'))
     item_id = Column(Integer, ForeignKey('item.id'))
 
 Base.metadata.create_all(engine)

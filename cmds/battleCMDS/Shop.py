@@ -27,9 +27,6 @@ async def Buy(ctx, index: int):
 
             player_item = db.PlayerItem(player=player, item=item)
             session.add(player_item)
-
-            await change_stats(player, item)
-
             session.commit()
             await ctx.send(f"Bought {item.name} for ${item.price}")
         else:
@@ -37,13 +34,7 @@ async def Buy(ctx, index: int):
     else:
         await ctx.send("Invalid item or you don't have a player!")
 
-async def change_stats(player, item):
-    if item.type == "weapon":
-        player.attack += item.effect
-    elif item.type == "armor":
-        player.defense -= item.effect
-    elif item.type == "boots":
-        player.speed += item.effect
+
 
 def setup(bot):
     bot.add_command(Shop)
