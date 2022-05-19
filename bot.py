@@ -45,6 +45,7 @@ bot.load_extension("cmds.battleCMDS.CreatePlayer")
 bot.load_extension("cmds.battleCMDS.Shop")
 bot.load_extension("cmds.adminCMDS.addItems")
 bot.load_extension("cmds.battleCMDS.Inventory")
+bot.load_extension("cmds.battleCMDS.daily")
 try:
     bot.run(DISCORD_TOKEN)
 except:
