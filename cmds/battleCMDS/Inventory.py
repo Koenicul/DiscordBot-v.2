@@ -5,6 +5,7 @@ import discord
 
 Session = sessionmaker(bind=db.engine)
 session = Session()
+temp_items = []
 
 @commands.command(name="Inventory", help="List all items in your inventory")
 async def Inventory(ctx):
@@ -46,6 +47,15 @@ async def Equip(ctx, index: int):
         session.add(new_equip)
         session.commit()
         await ctx.send(f"You equipped {item.name}")
+        for item in player.playerItems:
+            temp_items.append(item.item.id)
+            session.query(db.PlayerItem).filter(db.PlayerItem.id == item.id).delete()
+        session.commit()
+        for item in temp_items:
+            new_item = db.PlayerItem(player=player, item=session.query(db.Item).filter(db.Item.id == item).first())
+            session.add(new_item)
+        session.commit()
+        temp_items.clear()
     else:
         return await ctx.send("You don't have that item or you don't have a player")
 
