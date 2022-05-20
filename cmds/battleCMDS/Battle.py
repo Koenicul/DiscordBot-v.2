@@ -58,9 +58,6 @@ async def Fwinner(p1, p2):
     global channel
     embed = discord.Embed(title="Battle Over!", description=f"{p1.name} has won the battle!", color=0x00ff00)
 
-    p1.hp = p1.maxhp
-    p2.hp = p2.maxhp
-
     change = calcReward(p1, p2)
 
     embed.add_field(name=f"{p1.name} reward:", value=f"{int(change / 2)} exp\n{change} gold")
@@ -68,10 +65,13 @@ async def Fwinner(p1, p2):
 
     p1.exp += int(change / 2)
     p1.gold += change
-    await checkExp(p1)
 
     p2.exp += int(change / 10)
     p2.gold += int(change / 10)
+
+    session.commit()
+
+    await checkExp(p1)
     await checkExp(p2)
 
     await channel.send(embed=embed)
@@ -265,10 +265,10 @@ async def Move(ctx, option: int, attackType = 0):
 
                     if move_case == 1:
                         player_2.hp -= player_1.attack * player_2.defense
-                        embed.add_field(name=f"{player_1.name} light attacked {player_2.name} for {player_1.attack * player_2.defense} damage!", value="test")
+                        embed.add_field(name=f"{player_1.name} light attacked {player_2.name}", value=f"{player_2.name} took {player_1.attack * player_2.defense} damage!\n{player_2.name} HP: {player_2.hp}/{player_2.maxhp}")
                     if move_case == 2:
                         player_1.hp -= player_1.attack * player_1.defense * 0.5
-                        embed.add_field(name=f"{player_2.name} blocked {player_1.name}'s attack!", value="test")
+                        embed.add_field(name=f"{player_2.name} blocked {player_1.name}'s attack!", value=f"{player_1.name} took {player_1.attack * player_1.defense * 0.5} damage!\n{player_1.name} HP: {player_1.hp}/{player_1.maxhp}")
                     if move_case == 3:
                         item = session.query(db.PlayerItem).filter(db.PlayerItem.id == current_battle[player][1]).first()
                         if player_1.hp + item.item.effect > player_1.maxhp:
@@ -278,28 +278,35 @@ async def Move(ctx, option: int, attackType = 0):
                         
                         potions.clear()
                         session.query(db.PlayerItem).filter(db.PlayerItem.id==item.id).delete()
-                        embed.add_field(name=f"{player_1.name} used {item.item.name} and recovered {item.item.effect} HP!", value="test")
-                        print("check")
+                        embed.add_field(name=f"{player_1.name} used {item.item.name}", value=f"{player_1.name} recovered {item.item.effect} HP!\n{player_1.name} HP: {player_1.hp}/{player_1.maxhp}")
                     if move_case == 4:
-                        embed.add_field(name=f"{player_1.name} surrendered!", value="test")
+                        embed.add_field(name=f"{player_1.name} surrendered!", value=f"{player_2.name} won!")
                         await Fwinner(player_2, player_1)
                         game_over = True
                     if move_case == 5:
-                        embed.add_field(name="Both players blocked!", value="test")
+                        embed.add_field(name="Both players blocked!", value="")
                     if move_case == 6:
-                        embed.add_field(name="Both players surrendered!", value="test")
+                        embed.add_field(name="Both players surrendered!", value="It's a draw!")
                         game_over = True
                         break
                     if move_case == 7:
                         player_2.hp -= player_1.attack * player_2.defense * 0.5
-                        embed.add_field(name=f"{player_1.name} heavy attacked {player_2.name} for {player_1.attack * player_2.defense * 0.5} damage!", value="test")
+                        embed.add_field(name=f"{player_1.name} heavy attacked {player_2.name}", value=f"{player_2.name} took {player_1.attack * player_2.defense * 0.5} damage!\n{player_2.name} HP: {player_2.hp}/{player_2.maxhp}")
                     if move_case == 8:
                         player_2.hp -= player_1.attack * player_2.defense * 1.5
-                        embed.add_field(name=f"{player_1.name} heavy attacked {player_2.name} for {player_1.attack * player_2.defense * 1.5} damage!", value="test")
+                        embed.add_field(name=f"{player_1.name} heavy attacked {player_2.name}", value=f"{player_2.name} took {player_1.attack * player_2.defense * 1.5} damage!\n{player_2.name} HP: {player_2.hp}/{player_2.maxhp}")
                     if move_case == 9:
-                        embed.add_field(name=f"{player_1.name} blocked but {player_2.name} didn't attack!", value="test")
+                        embed.add_field(name=f"{player_1.name} blocked but {player_2.name} didn't attack!", value="")
+                    
+                    session.commit()
 
                     winner = check_winner(p1, p2)
+
+                    if winner == 1:
+                        await Fwinner(p1, p2)
+                    
+                    if winner == 2:
+                        await Fwinner(p2, p1)
                     
                     i -= 1
 
@@ -323,12 +330,6 @@ async def Move(ctx, option: int, attackType = 0):
 
                 await p1_user.send(embed=embed)
                 await p2_user.send(embed=embed)
-
-            if winner == 1:
-                await Fwinner(p1, p2)
-            
-            if winner == 2:
-                await Fwinner(p2, p1)
 
         else:
             await ctx.send("Invalid option!")
