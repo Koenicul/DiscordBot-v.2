@@ -69,4 +69,28 @@ class Equipment (Base):
     player_id = Column(Integer, ForeignKey('player.id'))
     item_id = Column(Integer, ForeignKey('item.id'))
 
+class Bullied (Base):
+    __tablename__ = 'bullied'
+
+    id = Column(Integer, primary_key=True)
+    player_id = Column(Integer)
+
+    def __init__(self, player_id):
+        self.player_id = player_id
+
+class Channels (Base):
+    __tablename__ = 'channels'
+
+    id = Column(Integer, primary_key=True)
+    channel_id = Column(String)
+    channel_name = Column(String)
+    discord_channel_id = Column(Integer)
+    latest_video_url = Column(String)
+
+    def __init__(self, channel_name, channel_id, discord_channel_id, latest_video_url):
+        self.channel_name = channel_name
+        self.channel_id = channel_id
+        self.discord_channel_id = discord_channel_id
+        self.latest_video_url = latest_video_url
+
 Base.metadata.create_all(engine)
