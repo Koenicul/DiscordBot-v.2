@@ -1,13 +1,12 @@
 from discord.ext import commands
-import discord
 import db
 from sqlalchemy.orm import sessionmaker
+import discord
 
 Session = sessionmaker(bind=db.engine)
 session = Session()
 
-@commands.command(name="Shop", help="Open shop menu")
-async def Shop(ctx):
+async def shop(ctx):
     await ctx.send("Opened Shop")
     embed = discord.Embed(title="Shop", description="Welcome to the shop!", color=discord.Color.orange())
     embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -17,8 +16,7 @@ async def Shop(ctx):
     embed.set_footer(text="Use --Buy <item index> to buy an item")
     await ctx.send(embed=embed)
 
-@commands.command(name="Buy", help="Buy an item")
-async def Buy(ctx, index: int):
+async def buy(ctx, index: int):
     player = session.query(db.Player).filter(db.Player.id == ctx.author.id).first()
     if 0 < index <= session.query(db.Item).count() and player is not None:
         item = session.query(db.Item).filter(db.Item.id == index).first()
@@ -33,9 +31,3 @@ async def Buy(ctx, index: int):
             await ctx.send("You don't have enough gold!")
     else:
         await ctx.send("Invalid item or you don't have a player!")
-
-
-
-def setup(bot):
-    bot.add_command(Shop)
-    bot.add_command(Buy)

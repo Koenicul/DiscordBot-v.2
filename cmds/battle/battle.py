@@ -1,7 +1,7 @@
 from discord.ext import commands
-import discord
-from sqlalchemy.orm import sessionmaker
 import db
+from sqlalchemy.orm import sessionmaker
+import discord
 
 Session = sessionmaker(bind=db.engine)
 session = Session()
@@ -42,65 +42,7 @@ reward_lookup = {
     tuple(range(-10000, -101)): 5
 }
 
-def check_winner(p1, p2):
-    global game_over
-    
-    if p1.hp <= 0:
-        game_over = True
-        return 2
-    elif p2.hp <= 0:
-        game_over = True
-        return 1
-    else:
-        return 0
-
-async def Fwinner(p1, p2):
-    global channel
-    embed = discord.Embed(title="Battle Over!", description=f"{p1.name} has won the battle!", color=0x00ff00)
-
-    change = calcReward(p1, p2)
-
-    embed.add_field(name=f"{p1.name} reward:", value=f"{int(change / 2)} exp\n{change} gold")
-    embed.add_field(name=f"{p2.name} reward:", value=f"{int(change / 10)} exp\n{int(change / 10)} gold")
-
-    p1.exp += int(change / 2)
-    p1.gold += change
-
-    p2.exp += int(change / 10)
-    p2.gold += int(change / 10)
-
-    session.commit()
-
-    await checkExp(p1)
-    await checkExp(p2)
-
-    await channel.send(embed=embed)
-
-
-def calcReward(p1, p2):
-    diff = p2.level - p1.level
-    for key in reward_lookup:
-        if diff in key:
-            return reward_lookup[key]
-
-async def checkExp(player):
-    global channel
-    if player.exp >= player.level * 10:
-        player.maxhp += 10
-        player.hp += 10
-        player.exp -= player.level * 10
-        player.level += 1
-
-        session.commit()
-
-        embed = discord.Embed(title="Level Up!", description=f"{player.name} has leveled up to level {player.level}!", color=0x00ff00)
-        embed.add_field(name="Health has increased by 10!", value=f"{player.name} now has {player.maxhp} health!")
-        embed.add_field(name=f"{player.name} now needs:", value=f"{player.level * 10 - player.exp} exp to level up!")
-
-        await channel.send(embed=embed)
-
-@commands.command(name="Battle", help="Start a battle")
-async def Battle(ctx, user2: discord.Member):
+async def battle(ctx, user2):
     global game_over
     global winner
     global channel
@@ -174,28 +116,7 @@ async def Battle(ctx, user2: discord.Member):
 
     session.commit()
 
-def check_move(p1, p2, attackType): 
-    if p1 == ['attack'] and p2 != ['block'] and attackType == [1]:
-        return 1
-    elif p1 == ['attack'] and p2 == ['block'] and attackType == [1]:
-        return 2
-    elif p1 == ['attack'] and p2 != ['block'] and attackType == [2]:
-        return 7
-    elif p1 == ['attack'] and p2 == ['block'] and attackType == [2]:
-        return 8
-    elif 'item' in p1:
-        return 3
-    elif p1 == ['surrender'] and p2 != ['surrender']:
-        return 4
-    elif p1 == ['block'] and p2 == ['block']:
-        return 5
-    elif p1 == ['surrender'] and p2 == ['surrender']:
-        return 6
-    elif p1 == ['block'] and p2 != ['attack']:
-        return 9
-
-@commands.command(name="Move", help="Move in battle")
-async def Move(ctx, option: int, attackType = 0):
+async def move(ctx, option, attackType):
     global game_over
     global turn
     global p1_move_made
@@ -338,6 +259,83 @@ async def Move(ctx, option: int, attackType = 0):
 
     session.commit()
 
+def check_move(p1, p2, attackType): 
+    if p1 == ['attack'] and p2 != ['block'] and attackType == [1]:
+        return 1
+    elif p1 == ['attack'] and p2 == ['block'] and attackType == [1]:
+        return 2
+    elif p1 == ['attack'] and p2 != ['block'] and attackType == [2]:
+        return 7
+    elif p1 == ['attack'] and p2 == ['block'] and attackType == [2]:
+        return 8
+    elif 'item' in p1:
+        return 3
+    elif p1 == ['surrender'] and p2 != ['surrender']:
+        return 4
+    elif p1 == ['block'] and p2 == ['block']:
+        return 5
+    elif p1 == ['surrender'] and p2 == ['surrender']:
+        return 6
+    elif p1 == ['block'] and p2 != ['attack']:
+        return 9
+
+def check_winner(p1, p2):
+    global game_over
+    
+    if p1.hp <= 0:
+        game_over = True
+        return 2
+    elif p2.hp <= 0:
+        game_over = True
+        return 1
+    else:
+        return 0
+
+async def Fwinner(p1, p2):
+    global channel
+    embed = discord.Embed(title="Battle Over!", description=f"{p1.name} has won the battle!", color=0x00ff00)
+
+    change = calcReward(p1, p2)
+
+    embed.add_field(name=f"{p1.name} reward:", value=f"{int(change / 2)} exp\n{change} gold")
+    embed.add_field(name=f"{p2.name} reward:", value=f"{int(change / 10)} exp\n{int(change / 10)} gold")
+
+    p1.exp += int(change / 2)
+    p1.gold += change
+
+    p2.exp += int(change / 10)
+    p2.gold += int(change / 10)
+
+    session.commit()
+
+    await checkExp(p1)
+    await checkExp(p2)
+
+    await channel.send(embed=embed)
+
+
+def calcReward(p1, p2):
+    diff = p2.level - p1.level
+    for key in reward_lookup:
+        if diff in key:
+            return reward_lookup[key]
+
+async def checkExp(player):
+    global channel
+    if player.exp >= player.level * 10:
+        player.maxhp += 10
+        player.hp += 10
+        player.exp -= player.level * 10
+        player.level += 1
+
+        session.commit()
+
+        embed = discord.Embed(title="Level Up!", description=f"{player.name} has leveled up to level {player.level}!", color=0x00ff00)
+        embed.add_field(name="Health has increased by 10!", value=f"{player.name} now has {player.maxhp} health!")
+        embed.add_field(name=f"{player.name} now needs:", value=f"{player.level * 10 - player.exp} exp to level up!")
+
+        await channel.send(embed=embed)
+
 async def useItem(ctx, player):
     index = 1
     embed = discord.Embed(title="Potions:", description="Choose your potion:")
@@ -365,11 +363,3 @@ async def useItem(ctx, player):
     else:
         await ctx.send("You have no items")
         return 0
-
-@Battle.error
-async def Battle_error(ctx):
-    await ctx.send("Please make sure to mention a player.")
-
-def setup(bot):
-    bot.add_command(Battle)
-    bot.add_command(Move)

@@ -7,8 +7,7 @@ Session = sessionmaker(bind=db.engine)
 session = Session()
 temp_items = []
 
-@commands.command(name="Inventory", help="List all items in your inventory")
-async def Inventory(ctx):
+async def inventory(ctx):
     player = session.query(db.Player).filter(db.Player.id == ctx.author.id).first()
     if player is not None:
         if player.playerItems is not None:
@@ -28,8 +27,7 @@ async def Inventory(ctx):
     else:
         await ctx.send("You have no player")
 
-@commands.command(name="Equip", help="Equip an item")
-async def Equip(ctx, index: int):
+async def equip(ctx, index: int):
     player = session.query(db.Player).filter(db.Player.id == ctx.author.id).first()
     if player is not None and 0 < index <= len(player.playerItems):
         item = session.query(db.PlayerItem).filter(db.PlayerItem.id == index).first().item
@@ -59,8 +57,7 @@ async def Equip(ctx, index: int):
     else:
         return await ctx.send("You don't have that item or you don't have a player")
 
-@commands.command(name="Unequip", help="Unequip an item")
-async def Unequip(ctx, type: str):
+async def unequip(ctx, type: str):
     player = session.query(db.Player).filter(db.Player.id == ctx.author.id).first()
     if player is not None:
         for item in player.equips:
@@ -90,8 +87,3 @@ async def neg_change_stats(player, item):
         player.defense += item.effect
     elif item.type == "boots":
         player.speed -= item.effect
-                
-def setup(bot):
-    bot.add_command(Inventory)
-    bot.add_command(Equip)
-    bot.add_command(Unequip)
