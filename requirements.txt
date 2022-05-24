@@ -1,0 +1,5 @@
+discord.py
+scrapetube
+SQLAlchemy
+python-dotenv
+yarl
