@@ -4,7 +4,7 @@ Simple bot for a discord server with your friends.
 
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+Use this bot to start battles or just annoy your friends. It is a simple bot which I made to learn more about python.
 
 ## Getting Started
 
