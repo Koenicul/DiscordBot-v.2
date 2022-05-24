@@ -19,7 +19,12 @@ pip install -r requirements.txt
 
 * Download and extract the zip
 * Add a .env file
-* In the .env file add "Prefix = your prefix here", "Owner_id = your discord name here" and "Discord_Token = token of your discord bot here"
+* In the .env file add:
+```
+Prefix = your prefix here
+Owner_id = your discord id here
+Discord_Token = token of your discord bot here
+```
 
 ### Executing program
 
