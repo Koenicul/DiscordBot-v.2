@@ -1,46 +1,41 @@
 from discord.ext import commands
-import os
 from dotenv import load_dotenv
 load_dotenv()
-from discord.ext.commands import CommandNotFound
-import json
-from random import choice
-from pretty_help import PrettyHelp
+import os
 
 DISCORD_TOKEN = os.getenv("Discord_Token")
 PREFIX = os.getenv("Prefix")
 
-bot = commands.Bot(command_prefix=PREFIX, case_insensitive=True, help_command = PrettyHelp())
+help_command = commands.DefaultHelpCommand(
+    no_category = 'Commands'
+)
 
-@bot.event
-async def on_ready():
-    print("logged in as {}".format(bot.user.name))
+bot = commands.Bot(command_prefix=PREFIX, case_insensitive=True, help_command=help_command)
 
-@bot.event
-async def on_command_error(error):
-    if isinstance(error, CommandNotFound):
-        return
-    raise error
+@bot.command(name="Load", help="Loads a cog")
+async def Load(ctx, extention):
+    bot.load_extension(f'cogs.{extention}')
+    await ctx.send(f'Loaded {extention}')
 
-@bot.event
-async def on_message(message):
-    with open("bullied_users.json", "r") as f:
-        data=json.load(f)
-    for user in data:
-        if user == message.author.id:
-            sentence = message.content
-            new_sentence = ''.join(choice((str.upper, str.lower))(c) for c in sentence)
-            await message.channel.send(new_sentence)
-    await bot.process_commands(message)
+@bot.command(name="Unload", help="Unloads a cog")
+async def Unload(ctx, extention):
+    bot.unload_extension(f'cogs.{extention}')
+    await ctx.send(f'Unloaded {extention}')
 
-bot.load_extension("cmds.Spam")
-bot.load_extension("cmds.Uploader")
-bot.load_extension("cmds.battleCMDS.Battle")
-bot.load_extension("cmds.battleCMDS.CreatePlayer")
-bot.load_extension("cmds.battleCMDS.Shop")
-bot.load_extension("cmds.adminCMDS.addItems")
-bot.load_extension("cmds.battleCMDS.ListItems")
-try:
-    bot.run(DISCORD_TOKEN)
-except:
-    print("Token is invalid")
+@bot.command(name="Reload", help="Reloads a cog or all cogs")
+async def Reload(ctx, extention):
+    if extention == "all":
+        for filename in os.listdir('./cogs'):
+            if filename.endswith('.py'):
+                bot.unload_extension(f'cogs.{filename[:-3]}')
+                bot.load_extension(f'cogs.{filename[:-3]}')
+        return await ctx.send("Reloaded all cogs")
+    bot.unload_extension(f'cogs.{extention}')
+    bot.load_extension(f'cogs.{extention}')
+    await ctx.send(f'Reloaded {extention}')
+
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        bot.load_extension(f'cogs.{filename[:-3]}')
+
+bot.run(DISCORD_TOKEN)
