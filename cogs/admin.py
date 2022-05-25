@@ -16,7 +16,7 @@ class Admin(commands.Cog):
 
     @commands.command(name="AddItem", help="Adds an item to the database")
     async def addItem(self, ctx, name: str, description: str, price: int, type: str, effect: float):
-        if ctx.message.author.name == os.getenv("Owner_id"):
+        if ctx.author.id == int(os.getenv("Owner_id")):
             item = db.Item(name, description, price, type, effect)
             session.add(item)
             session.commit()

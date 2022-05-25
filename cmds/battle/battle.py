@@ -247,10 +247,10 @@ async def move(ctx, option, attackType):
                         description="Choose your move: (attack/block/item/surrender)",
                     )
 
-                embed.set_footer(text="Type '--move <move index>' to make your move!")
+                    embed.set_footer(text="Type '--move <move index>' to make your move!")
 
-                await p1_user.send(embed=embed)
-                await p2_user.send(embed=embed)
+                    await p1_user.send(embed=embed)
+                    await p2_user.send(embed=embed)
 
         else:
             await ctx.send("Invalid option!")
