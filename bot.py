@@ -1,4 +1,5 @@
 from discord.ext import commands
+from discord import Intents
 from dotenv import load_dotenv
 load_dotenv()
 import os
@@ -10,7 +11,11 @@ help_command = commands.DefaultHelpCommand(
     no_category = 'Commands'
 )
 
-bot = commands.Bot(command_prefix=PREFIX, case_insensitive=True, help_command=help_command)
+# Define Discord intents(basically what events to receive from discord)
+intents = Intents.default()
+intents.members = True
+
+bot = commands.Bot(command_prefix=PREFIX, case_insensitive=True, help_command=help_command, intents=intents)
 
 @bot.command(name="Load", help="Loads a cog")
 async def Load(ctx, extention):
