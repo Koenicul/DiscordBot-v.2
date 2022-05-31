@@ -11,7 +11,6 @@ help_command = commands.DefaultHelpCommand(
     no_category = 'Commands'
 )
 
-# Define Discord intents(basically what events to receive from discord)
 intents = Intents.default()
 intents.members = True
 
