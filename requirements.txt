@@ -3,3 +3,4 @@ scrapetube
 SQLAlchemy
 python-dotenv
 yarl
+youtube_dl
